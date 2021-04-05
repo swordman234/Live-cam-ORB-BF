@@ -36,7 +36,9 @@ if len(good)>MIN_MATCH_COUNT:
     dst = cv2.perspectiveTransform(pts,M)
     box = np.array(dst, dtype="int")
     (tl, bl, br, tr) = box
-    midpoint = (tl+bl+br+tr)/4
+    midpoint = (tl[0]+bl[0]+br[0]+tr[0])/4
+    #midpoint = np.rint(midpoint) //round the integer
+    midpoint = midpoint.astype(int)
     print( "pst = ({})".format(pts) )
     print( "dst = ({})".format(dst) )
     print( "box = ({})".format(box) )
@@ -44,11 +46,11 @@ if len(good)>MIN_MATCH_COUNT:
     print( "bottom left = ({})".format(bl) )
     print( "top right = ({})".format(tr) )
     print( "bottom right = ({})".format(br) )
-    print( "midpoint 0 = ({})".format(midpoint[0][0]) )
-    print( "midpoint 1 = ({})".format(midpoint[0][1]) )    
+    print( "midpoint 0 = ({})".format(midpoint[0]) )
+    print( "midpoint 1 = ({})".format(midpoint[1]) )    
 
     img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-    img2 = cv2.circle(img2,(int(midpoint[0][0]),int(midpoint[0][1])),5,255,-1)
+    img2 = cv2.circle(img2,(midpoint[0],midpoint[1]),5,255,-1)
 else:
     print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
     matchesMask = None

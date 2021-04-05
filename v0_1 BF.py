@@ -28,7 +28,6 @@ pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 # create BFMatcher object
 bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 
-
 def LIVE_CAM_ORB(live_cam):
     img = live_cam
 
@@ -50,14 +49,17 @@ def LIVE_CAM_ORB(live_cam):
     if len(good)>MIN_MATCH_COUNT:
         src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-        M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
         #(for debugging)
         #matchesMask = mask.ravel().tolist() 
         dst = cv2.perspectiveTransform(pts,M)
         (tl, tr, br, bl) = dst
         midpoint = (tl+bl+br+tr)/4
+        midpoint = (tl[0]+bl[0]+br[0]+tr[0])/4
+        #midpoint = np.rint(midpoint) //round the integer
+        midpoint = midpoint.astype(int)
         live_cam = cv2.polylines(live_cam,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-        live_cam = cv2.circle(live_cam,(int(midpoint[0][0]),int(midpoint[0][1])),5,255,-1)
+        live_cam = cv2.circle(live_cam,(midpoint[0],midpoint[1]),5,255,-1)
         
         #for img3 (debugging with black and white)
         #img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
@@ -65,6 +67,9 @@ def LIVE_CAM_ORB(live_cam):
         #print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
         #(for debugging)
         #matchesMask = None
+
+        #searching degree for motor value
+        motor_degree(midpoint)
 
     #Draw matches. (for debugging)
     #draw_params = dict(matchColor = (0,255,0), # draw matches in green color
@@ -77,17 +82,40 @@ def LIVE_CAM_ORB(live_cam):
 
     return live_cam
 
+def motor_degree(midpoint):
+    min_X_point = 0
+    max_X_point = width
+    min_Y_point = 0
+    max_Y_point = height
+
+    #degree motor
+    min_X_degree = 60
+    max_X_degree = 120
+    min_Y_degree = 60
+    max_Y_degree = 120
+
+    #get X degree
+    X_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree))+min_X_degree)
+
+    #get Y degree
+    Y_degree = int((midpoint[1]/height*(max_Y_degree-min_Y_degree))+min_Y_degree)
+    
+    #for debugging
+    #print( "X,Y = ({},{})".format(X_degree,Y_degree))
+
+
+
 while(True):
     ret, frame= cap.read()
    
-    live_cam = LIVE_CAM_ORB(frame)
+    frame = LIVE_CAM_ORB(frame)
     
-    cv2.imshow("the actual frame", live_cam)
+    cv2.imshow("the actual frame", frame)
     
     #press enter to exit
     if cv2.waitKey(1) == 13:
         break
-    time.sleep(0.05)
+    time.sleep(0.25)
 
 
 cap.release()
