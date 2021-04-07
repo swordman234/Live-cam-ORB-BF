@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import time
+import serial
 
 cap = cv2.VideoCapture(0)
 #set the resolution
@@ -11,22 +12,43 @@ height =  480 #480 720
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,width)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
 
-MIN_MATCH_COUNT = 12
-
 # Initiate ORB detector with max 1000 features and scaling 1.2
 orb = cv2.ORB_create(1000, 1.2)
 
 #input the reference image
-input_image = cv2.imread('test1/raspberry pi.jpg')
+input_image = cv2.imread('raspberry pi.jpg')
 input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
 #search the keypoint of input image
 kp1, des1 = orb.detectAndCompute(input_image,None)
-#search the height and Width of the input image to make the boundary
+#search the height and Width of the input image
+#to make the boundary on display
 h,w = input_image.shape
 pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 
 # create BFMatcher object
 bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
+
+# Set the port name and the baud rate. This baud rate should match the
+# baud rate set on the Arduino.
+# Timeout parameter makes sure that program doesn't get stuck if data isn't
+# being received. After 1 second, the function will return with whatever data
+# it has. The readline() function will only wait 1 second for a complete line 
+# of input.
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+
+# Get rid of garbage/incomplete data
+ser.flush()
+
+#variable
+#the minimum matching keypoint to detect the object
+MIN_MATCH_COUNT = 12
+
+#degree motor
+min_X_degree = 60
+max_X_degree = 120
+min_Y_degree = 60
+max_Y_degree = 120
+
 
 def LIVE_CAM_ORB(live_cam):
     img = live_cam
@@ -63,13 +85,14 @@ def LIVE_CAM_ORB(live_cam):
         
         #for img3 (debugging with black and white)
         #img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+        
+        #searching degree for motor value
+        motor_degree(midpoint)
+        
     #else:
         #print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
         #(for debugging)
         #matchesMask = None
-
-        #searching degree for motor value
-        motor_degree(midpoint)
 
     #Draw matches. (for debugging)
     #draw_params = dict(matchColor = (0,255,0), # draw matches in green color
@@ -83,25 +106,36 @@ def LIVE_CAM_ORB(live_cam):
     return live_cam
 
 def motor_degree(midpoint):
-    min_X_point = 0
-    max_X_point = width
-    min_Y_point = 0
-    max_Y_point = height
-
-    #degree motor
-    min_X_degree = 60
-    max_X_degree = 120
-    min_Y_degree = 60
-    max_Y_degree = 120
-
     #get X degree
     X_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree))+min_X_degree)
 
     #get Y degree
-    Y_degree = int((midpoint[1]/height*(max_Y_degree-min_Y_degree))+min_Y_degree)
+    #because you got a flipped value
+    #(the higher you get, the smaller the midpoint value)
+    #the formula is different from getting X
+    Y_degree = int(max_Y_degree-(midpoint[1]/height*(max_Y_degree-min_Y_degree)))
     
     #for debugging
+    #print( "X,Y = ({},{})".format(midpoint[0],midpoint[1]))
     #print( "X,Y = ({},{})".format(X_degree,Y_degree))
+    
+    #sending the value to arduino
+    send_to_arduino(X_degree,Y_degree)
+    
+def send_to_arduino(x,y):
+    angle_value_list = [str(x),str(y)]
+    send_string = ','.join(angle_value_list)
+    send_string += "\n"
+    
+    # Send the string. Make sure you encode it before you send it to the Arduino.
+    ser.write(send_string.encode('utf-8'))
+    
+    #for debugging
+    #receive serial print from arduino for checking value that
+    #rasp send
+    #receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
+    #print(receive_string)
+    
 
 
 
