@@ -16,7 +16,7 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
 orb = cv2.ORB_create(1000, 1.2)
 
 #input the reference image
-input_image = cv2.imread('raspberry pi.jpg')
+input_image = cv2.imread('test1/raspberry pi.jpg')
 input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
 #search the keypoint of input image
 kp1, des1 = orb.detectAndCompute(input_image,None)
@@ -34,7 +34,7 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 # being received. After 1 second, the function will return with whatever data
 # it has. The readline() function will only wait 1 second for a complete line 
 # of input.
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+ser = serial.Serial('COM7', 9600, timeout=1)
 
 # Get rid of garbage/incomplete data
 ser.flush()
@@ -107,13 +107,13 @@ def LIVE_CAM_ORB(live_cam):
 
 def motor_degree(midpoint):
     #get X degree
-    X_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree))+min_X_degree)
+    Y_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree))+min_X_degree)
 
     #get Y degree
     #because you got a flipped value
     #(the higher you get, the smaller the midpoint value)
     #the formula is different from getting X
-    Y_degree = int(max_Y_degree-(midpoint[1]/height*(max_Y_degree-min_Y_degree)))
+    X_degree = int(max_Y_degree-(midpoint[1]/height*(max_Y_degree-min_Y_degree)))
     
     #for debugging
     #print( "X,Y = ({},{})".format(midpoint[0],midpoint[1]))
