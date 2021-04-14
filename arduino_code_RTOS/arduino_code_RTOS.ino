@@ -38,15 +38,6 @@ float elapsedTime2, currentTime2, previousTime2;
 int c2 = 0;
 //---------------------------------------------------------------
 
-float px, ix, dx, pidx;
-float errorx, prev_errorx = 0;
-
-float py, iy, dy, pidy;
-float errory, prev_errory = 0;
-
-float pz, iz, dz, pidz;
-float errorz, prev_errorz = 0;
-
 float spX = 90;
 int pX = 180;
 int qX = 0;
@@ -169,7 +160,126 @@ float g_z = 0.000001274;
 
 //---------------------------------------------------------------
 
+void calculate_IMU_error() {
+  // Fungsi ini digunakan untuk menghitung nilai error dari accelerometer dan gyroscope
+  // Posisi IMU harus diletakan dibidang yang datar untuk mendapatkan nilai yang baik
 
+  // Read accelerometer values 200 times
+  while (c < 200) {
+    Wire.beginTransmission(MPU);
+    Wire.write(0x3B);
+    Wire.endTransmission(false);
+    Wire.requestFrom(MPU, 6, true);
+    AccX = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
+    AccY = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
+    AccZ = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
+
+    // Semua bacaan dijumlahkan
+    AccErrorX = AccErrorX + ((atan((AccY) / sqrt(pow((AccX), 2) + pow((AccZ), 2))) * 180 / PI)); // Rumus matriks rotasi, ada di data sheet
+    AccErrorY = AccErrorY + ((atan(-1 * (AccX) / sqrt(pow((AccY), 2) + pow((AccZ), 2))) * 180 / PI));
+    c++;
+  }
+
+  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
+  AccErrorX = AccErrorX / 200;
+  AccErrorY = AccErrorY / 200;
+  c = 0;
+
+  // Read gyro values 200 times
+  while (c < 200) {
+    Wire.beginTransmission(MPU);
+    Wire.write(0x43);
+    Wire.endTransmission(false);
+    Wire.requestFrom(MPU, 6, true);
+    GyroX = Wire.read() << 8 | Wire.read();
+    GyroY = Wire.read() << 8 | Wire.read();
+    GyroZ = Wire.read() << 8 | Wire.read();
+
+    // Semua bacaan dijumlahkan
+    GyroErrorX = GyroErrorX + (GyroX / 131.0);
+    GyroErrorY = GyroErrorY + (GyroY / 131.0);
+    GyroErrorZ = GyroErrorZ + (GyroZ / 131.0);
+    c++;
+  }
+  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
+  GyroErrorX = GyroErrorX / 200;
+  GyroErrorY = GyroErrorY / 200;
+  GyroErrorZ = GyroErrorZ / 200;
+
+  // Print error values pada Serial Monitor
+  // Apabila tidak terdapat error maka akan bernilai 0
+  Serial.print("AccErrorX: ");
+  Serial.println(AccErrorX);
+  Serial.print("AccErrorY: ");
+  Serial.println(AccErrorY);
+  Serial.print("GyroErrorX: ");
+  Serial.println(GyroErrorX);
+  Serial.print("GyroErrorY: ");
+  Serial.println(GyroErrorY);
+  Serial.print("GyroErrorZ: ");
+  Serial.println(GyroErrorZ);
+}
+
+void calculate_IMU_error2() {
+  // Fungsi ini digunakan untuk menghitung nilai error dari accelerometer dan gyroscope
+  // Posisi IMU harus diletakan dibidang yang datar untuk mendapatkan nilai yang baik
+
+  // Read accelerometer values 200 times
+  while (c2 < 200) {
+    Wire.beginTransmission(MPU2);
+    Wire.write(0x3B);
+    Wire.endTransmission(false);
+    Wire.requestFrom(MPU2, 6, true);
+    AccX2 = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
+    AccY2 = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
+    AccZ2 = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
+
+    // Semua bacaan dijumlahkan
+    AccErrorX2 = AccErrorX2 + ((atan((AccY2) / sqrt(pow((AccX2), 2) + pow((AccZ2), 2))) * 180 / PI));
+    AccErrorY2 = AccErrorY2 + ((atan(-1 * (AccX2) / sqrt(pow((AccY2), 2) + pow((AccZ2), 2))) * 180 / PI));
+    c2++;
+  }
+
+  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
+  AccErrorX2 = AccErrorX2 / 200;
+  AccErrorY2 = AccErrorY2 / 200;
+  c2 = 0;
+
+  // Read gyro values 200 times
+  while (c2 < 200) {
+    Wire.beginTransmission(MPU2);
+    Wire.write(0x43);
+    Wire.endTransmission(false);
+    Wire.requestFrom(MPU2, 6, true);
+    GyroX2 = Wire.read() << 8 | Wire.read();
+    GyroY2 = Wire.read() << 8 | Wire.read();
+    GyroZ2 = Wire.read() << 8 | Wire.read();
+
+    // Semua bacaan dijumlahkan
+    GyroErrorX2 = GyroErrorX2 + (GyroX2 / 131.0);
+    GyroErrorY2 = GyroErrorY2 + (GyroY2 / 131.0);
+    GyroErrorZ2 = GyroErrorZ2 + (GyroZ2 / 131.0);
+    c2++;
+  }
+  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
+  GyroErrorX2 = GyroErrorX2 / 200;
+  GyroErrorY2 = GyroErrorY2 / 200;
+  GyroErrorZ2 = GyroErrorZ2 / 200;
+
+  // Print error values pada Serial Monitor
+  // Apabila tidak terdapat error maka akan bernilai 0
+  //  Serial.print("AccErrorX: ");
+  //  Serial.println(AccErrorX2);
+  //  Serial.print("AccErrorY: ");
+  //  Serial.println(AccErrorY2);
+  //  Serial.print("GyroErrorX: ");
+  //  Serial.println(GyroErrorX2);
+  //  Serial.print("GyroErrorY: ");
+  //  Serial.println(GyroErrorY2);
+  //  Serial.print("GyroErrorZ: ");
+  //  Serial.println(GyroErrorZ2);
+}
+//---------------------------------------------------------------
 void setup() {
 
   Serial.begin(9600);
@@ -242,18 +352,6 @@ void loop() {
 
 }
 
-void SerialCom(void *pvParameters)
-{
-  Serial.println("Komunikasi Serial OK");
-  for(;;){
-    if (Serial.available()>0){
-      RaspiX = Serial.parseInt();
-      RaspiZ = Serial.parseInt();
-      modify_Xsetpoint(RaspiX, RaspiX+90, RaspiX-90);
-      modify_Zsetpoint(RaspiZ, RaspiZ+90, RaspiZ-90);
-    }
-  }
-}
 
 void modify_Xsetpoint(float RaspiX, float RaspiX1, float RaspiX2)
 {
@@ -268,6 +366,22 @@ void modify_Zsetpoint(float RaspiZ, float RaspiZ1, float RaspiZ2)
   pZ = RaspiZ1;
   qZ = RaspiZ2;
 }
+
+void SerialCom(void *pvParameters)
+{
+  Serial.println("Komunikasi Serial OK");
+  for(;;){
+    RaspiZ = Serial.parseInt();
+    RaspiX = Serial.parseInt();
+    if(RaspiZ>70 && RaspiZ<110 && RaspiX>80 && RaspiX<110){
+      modify_Xsetpoint(RaspiX, RaspiX+90, RaspiX-90);
+      modify_Zsetpoint(RaspiZ, RaspiZ+90, RaspiZ-90);
+    }
+    else{
+      Serial.println("nilai X/Y melebihi batas");
+    }
+    }
+  }
 
 void modify_xhat(float x1, float x2, float x3)
 {
@@ -515,125 +629,3 @@ void Gerak(void *pvParameters)
     Serial.println(gyro2Value2);
   }
 }
-
-
-void calculate_IMU_error() {
-  // Fungsi ini digunakan untuk menghitung nilai error dari accelerometer dan gyroscope
-  // Posisi IMU harus diletakan dibidang yang datar untuk mendapatkan nilai yang baik
-
-  // Read accelerometer values 200 times
-  while (c < 200) {
-    Wire.beginTransmission(MPU);
-    Wire.write(0x3B);
-    Wire.endTransmission(false);
-    Wire.requestFrom(MPU, 6, true);
-    AccX = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
-    AccY = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
-    AccZ = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
-
-    // Semua bacaan dijumlahkan
-    AccErrorX = AccErrorX + ((atan((AccY) / sqrt(pow((AccX), 2) + pow((AccZ), 2))) * 180 / PI)); // Rumus matriks rotasi, ada di data sheet
-    AccErrorY = AccErrorY + ((atan(-1 * (AccX) / sqrt(pow((AccY), 2) + pow((AccZ), 2))) * 180 / PI));
-    c++;
-  }
-
-  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
-  AccErrorX = AccErrorX / 200;
-  AccErrorY = AccErrorY / 200;
-  c = 0;
-
-  // Read gyro values 200 times
-  while (c < 200) {
-    Wire.beginTransmission(MPU);
-    Wire.write(0x43);
-    Wire.endTransmission(false);
-    Wire.requestFrom(MPU, 6, true);
-    GyroX = Wire.read() << 8 | Wire.read();
-    GyroY = Wire.read() << 8 | Wire.read();
-    GyroZ = Wire.read() << 8 | Wire.read();
-
-    // Semua bacaan dijumlahkan
-    GyroErrorX = GyroErrorX + (GyroX / 131.0);
-    GyroErrorY = GyroErrorY + (GyroY / 131.0);
-    GyroErrorZ = GyroErrorZ + (GyroZ / 131.0);
-    c++;
-  }
-  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
-  GyroErrorX = GyroErrorX / 200;
-  GyroErrorY = GyroErrorY / 200;
-  GyroErrorZ = GyroErrorZ / 200;
-
-  // Print error values pada Serial Monitor
-  // Apabila tidak terdapat error maka akan bernilai 0
-  Serial.print("AccErrorX: ");
-  Serial.println(AccErrorX);
-  Serial.print("AccErrorY: ");
-  Serial.println(AccErrorY);
-  Serial.print("GyroErrorX: ");
-  Serial.println(GyroErrorX);
-  Serial.print("GyroErrorY: ");
-  Serial.println(GyroErrorY);
-  Serial.print("GyroErrorZ: ");
-  Serial.println(GyroErrorZ);
-}
-
-void calculate_IMU_error2() {
-  // Fungsi ini digunakan untuk menghitung nilai error dari accelerometer dan gyroscope
-  // Posisi IMU harus diletakan dibidang yang datar untuk mendapatkan nilai yang baik
-
-  // Read accelerometer values 200 times
-  while (c2 < 200) {
-    Wire.beginTransmission(MPU2);
-    Wire.write(0x3B);
-    Wire.endTransmission(false);
-    Wire.requestFrom(MPU2, 6, true);
-    AccX2 = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
-    AccY2 = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
-    AccZ2 = (Wire.read() << 8 | Wire.read()) / 16384.0 ;
-
-    // Semua bacaan dijumlahkan
-    AccErrorX2 = AccErrorX2 + ((atan((AccY2) / sqrt(pow((AccX2), 2) + pow((AccZ2), 2))) * 180 / PI));
-    AccErrorY2 = AccErrorY2 + ((atan(-1 * (AccX2) / sqrt(pow((AccY2), 2) + pow((AccZ2), 2))) * 180 / PI));
-    c2++;
-  }
-
-  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
-  AccErrorX2 = AccErrorX2 / 200;
-  AccErrorY2 = AccErrorY2 / 200;
-  c2 = 0;
-
-  // Read gyro values 200 times
-  while (c2 < 200) {
-    Wire.beginTransmission(MPU2);
-    Wire.write(0x43);
-    Wire.endTransmission(false);
-    Wire.requestFrom(MPU2, 6, true);
-    GyroX2 = Wire.read() << 8 | Wire.read();
-    GyroY2 = Wire.read() << 8 | Wire.read();
-    GyroZ2 = Wire.read() << 8 | Wire.read();
-
-    // Semua bacaan dijumlahkan
-    GyroErrorX2 = GyroErrorX2 + (GyroX2 / 131.0);
-    GyroErrorY2 = GyroErrorY2 + (GyroY2 / 131.0);
-    GyroErrorZ2 = GyroErrorZ2 + (GyroZ2 / 131.0);
-    c2++;
-  }
-  // Hasil dari penjumlahan dibagi dengan 200 untuk mendapatkan nilai errornya
-  GyroErrorX2 = GyroErrorX2 / 200;
-  GyroErrorY2 = GyroErrorY2 / 200;
-  GyroErrorZ2 = GyroErrorZ2 / 200;
-
-  // Print error values pada Serial Monitor
-  // Apabila tidak terdapat error maka akan bernilai 0
-  //  Serial.print("AccErrorX: ");
-  //  Serial.println(AccErrorX2);
-  //  Serial.print("AccErrorY: ");
-  //  Serial.println(AccErrorY2);
-  //  Serial.print("GyroErrorX: ");
-  //  Serial.println(GyroErrorX2);
-  //  Serial.print("GyroErrorY: ");
-  //  Serial.println(GyroErrorY2);
-  //  Serial.print("GyroErrorZ: ");
-  //  Serial.println(GyroErrorZ2);
-}
-//---------------------------------------------------------------
