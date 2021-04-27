@@ -2,7 +2,6 @@
 #1.0
 #basic stuff
 
-from imutils.video import FPS
 import numpy as np
 import cv2
 import time
@@ -39,7 +38,7 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 # being received. After 1 second, the function will return with whatever data
 # it has. The readline() function will only wait 1 second for a complete line 
 # of input.
-#ser = serial.Serial('COM7', 9600, timeout=1)
+#ser = serial.Serial('COM7', 115200, timeout=1)
 
 # Get rid of garbage/incomplete data
 #ser.flush()
@@ -49,10 +48,10 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 MIN_MATCH_COUNT = 12
 
 #degree motor
-min_X_degree = 60
-max_X_degree = 120
-min_Y_degree = 60
-max_Y_degree = 120
+min_X_degree = -90
+max_X_degree = 90
+min_Y_degree = -90
+max_Y_degree = 90
 
 
 def LIVE_CAM_ORB(live_cam):
@@ -144,16 +143,11 @@ def send_to_arduino(x,y):
     
 
 while(True):
-    
-    fps = FPS().start()
     ret, frame= cap.read()
    
     frame = LIVE_CAM_ORB(frame)
-    fps.update()
     
     cv2.imshow("the actual frame", frame)
-    fps.stop()
-    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
     
     #press enter to exit
     if cv2.waitKey(1) == 13:

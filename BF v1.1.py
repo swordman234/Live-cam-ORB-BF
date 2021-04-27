@@ -5,7 +5,6 @@
 #1.0
 #basic stuff
 
-from imutils.video import FPS
 import numpy as np
 import imutils
 from imutils.video import WebcamVideoStream
@@ -43,20 +42,20 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 # being received. After 1 second, the function will return with whatever data
 # it has. The readline() function will only wait 1 second for a complete line 
 # of input.
-#ser = serial.Serial('COM7', 9600, timeout=1)
+ser = serial.Serial('COM7', 115200, timeout=0.05)
 
 # Get rid of garbage/incomplete data
-#ser.flush()
+ser.flush()
 
 #variable
 #the minimum matching keypoint to detect the object
 MIN_MATCH_COUNT = 12
 
 #degree motor
-min_X_degree = 70
-max_X_degree = 110
-min_Y_degree = 80
-max_Y_degree = 110
+min_X_degree = -45
+max_X_degree = 45
+min_Y_degree = -5
+max_Y_degree = 45
 
 
 def LIVE_CAM_ORB(live_cam):
@@ -83,7 +82,9 @@ def LIVE_CAM_ORB(live_cam):
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
         #(for debugging)
         #matchesMask = mask.ravel().tolist() 
-        if len(M):
+        #print( "M = {}".format(M))
+
+        if M is not None:
             dst = cv2.perspectiveTransform(pts,M)
             (tl, tr, br, bl) = dst
             midpoint = (tl+bl+br+tr)/4
@@ -102,9 +103,9 @@ def LIVE_CAM_ORB(live_cam):
     #else:
         #midpoint = (width/2,height/2)
         #motor_degree(midpoint)
-
-        #print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
         #(for debugging)
+        #print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
+        
         #matchesMask = None
 
     #Draw matches. (for debugging)
@@ -141,30 +142,33 @@ def send_to_arduino(x,y):
     angle_value_list = [str(x),str(y)]
     send_string = ','.join(angle_value_list)
     send_string += "\n"
+
+
+
+    #send_string ="["
+    #send_string += ','.join(angle_value_list)
+    #send_string += "]\n"
+
+
+    #debugging
+    #to check the value in send_string
+    #print( "send string = {}".format(send_string))
     
     # Send the string. Make sure you encode it before you send it to the Arduino.
-    #ser.write(send_string.encode('utf-8'))
-    
-    # Get rid of garbage/incomplete data
-    #ser.flush()
+    ser.write(send_string.encode('utf-8'))
+    #time.sleep(0.02)
     
 
 
 
 while(True):
-    fps = FPS().start()
     frame = cap.read()
    
     frame = LIVE_CAM_ORB(frame)
-    fps.update()
     
     cv2.imshow("the actual frame", frame)
-    fps.stop()
-    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
-
     #for debugging
-    #receive serial print from arduino for checking value that
-    #rasp send
+    #receive serial print from arduino for checking value that rasp send
     #receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
     #print(receive_string)
     
