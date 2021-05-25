@@ -5,16 +5,16 @@
 #1.0
 #basic stuff
 
+#import imutils
 import numpy as np
-import imutils
 from imutils.video import WebcamVideoStream
 import cv2
 import time
 import serial
 
 #set the resolution
-width =  640 #640 1280
-height =  480 #480 720
+width =  1280 #640 1280
+height =  720 #480 720
 
 #set the camera and warming up
 cap = WebcamVideoStream(src=0,resolution=(width,height)).start()
@@ -24,7 +24,7 @@ time.sleep(2.0)
 orb = cv2.ORB_create(1000, 1.2)
 
 #input the reference image
-input_image = cv2.imread('test1/raspberry pi.jpg')
+input_image = cv2.imread('raspberry pi.jpg')
 input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
 #search the keypoint of input image
 kp1, des1 = orb.detectAndCompute(input_image,None)
@@ -42,20 +42,21 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 # being received. After 1 second, the function will return with whatever data
 # it has. The readline() function will only wait 1 second for a complete line 
 # of input.
-ser = serial.Serial('COM7', 115200, timeout=0.05)
+ser = serial.Serial('COM3', 9600, timeout=0.05)
 
 # Get rid of garbage/incomplete data
 ser.flush()
+time.sleep(3)
 
 #variable
 #the minimum matching keypoint to detect the object
 MIN_MATCH_COUNT = 12
 
 #degree motor
-min_X_degree = -45
-max_X_degree = 45
-min_Y_degree = -5
-max_Y_degree = 45
+min_X_degree = 55   #min camera X angle 54.79
+max_X_degree = 125  #max camera X angle 125.21
+min_Y_degree = 70   #min camera Y angle 68.35
+max_Y_degree = 110  #max camera Y angle 111.65
 
 
 def LIVE_CAM_ORB(live_cam):
@@ -75,8 +76,9 @@ def LIVE_CAM_ORB(live_cam):
     for m,n in matches:
         if m.distance < 0.75*n.distance:
             good.append(m)
-
-    if len(good)>MIN_MATCH_COUNT:
+    
+    #take the shape of reference image to make boundary to the display
+    if len(good)>MIN_MATCH_COUNT: 
         src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
@@ -85,7 +87,7 @@ def LIVE_CAM_ORB(live_cam):
         #print( "M = {}".format(M))
 
         if M is not None:
-            dst = cv2.perspectiveTransform(pts,M)
+            dst = cv2.perspectiveTransform(pts,M)   
             (tl, tr, br, bl) = dst
             midpoint = (tl+bl+br+tr)/4
             midpoint = (tl[0]+bl[0]+br[0]+tr[0])/4
@@ -129,6 +131,10 @@ def motor_degree(midpoint):
     #the formula is different from getting X
     Y_degree = int(max_Y_degree-(midpoint[1]/height*(max_Y_degree-min_Y_degree)))
     
+    #because the servo only can move until 75 degree
+    if (Y_degree < 75):
+        Y_degree = 75
+
     #for debugging
     #print( "X,Y = ({},{})".format(midpoint[0],midpoint[1]))
     #print( "X,Y = ({},{})".format(X_degree,Y_degree))
@@ -143,20 +149,17 @@ def send_to_arduino(x,y):
     send_string = ','.join(angle_value_list)
     send_string += "\n"
 
-
-
     #send_string ="["
     #send_string += ','.join(angle_value_list)
     #send_string += "]\n"
 
-
     #debugging
     #to check the value in send_string
-    #print( "send string = {}".format(send_string))
+    print( "send string = {}".format(send_string))
     
     # Send the string. Make sure you encode it before you send it to the Arduino.
     ser.write(send_string.encode('utf-8'))
-    #time.sleep(0.02)
+    time.sleep(0.2)
     
 
 
@@ -169,8 +172,8 @@ while(True):
     cv2.imshow("the actual frame", frame)
     #for debugging
     #receive serial print from arduino for checking value that rasp send
-    #receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
-    #print(receive_string)
+    receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
+    print(receive_string)
     
     #press enter to exit
     if cv2.waitKey(1) == 13:

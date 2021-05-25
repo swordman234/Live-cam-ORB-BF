@@ -6,8 +6,8 @@ Servo servo_z;
 const unsigned int MAX_INPUT = 10;
 int nilaiX = map(0, -90, 90, 0, 180);
 int nilaiY = map(0, -90, 90, 0, 180);
-int raspiX = 0;
-int raspiY = 0;
+int raspiX = 90;
+int raspiY = 90;
 
 void setup() {
   // put your setup code here, to run once:
@@ -86,9 +86,9 @@ void loop() {
     nilaiY = map(raspiY,-90,90,0,180);
   //}
 
-  servo_x.write(nilaiY);                  // sets the servo position according to the scaled value
+  servo_x.write(raspiY);                  // sets the servo position according to the scaled value
   servo_y.write(90);                  // sets the servo position according to the scaled value
-  servo_z.write(nilaiX);                  // sets the servo position according to the scaled value
+  servo_z.write(raspiX);                  // sets the servo position according to the scaled value
 
   /*
   Serial.print("X = ");
