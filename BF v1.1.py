@@ -8,6 +8,7 @@
 #import imutils
 import numpy as np
 from imutils.video import WebcamVideoStream
+from imutils.video import FPS
 import cv2
 import time
 import serial
@@ -42,11 +43,13 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 # being received. After 1 second, the function will return with whatever data
 # it has. The readline() function will only wait 1 second for a complete line 
 # of input.
-ser = serial.Serial('COM3', 9600, timeout=0.05)
+
+#ser = serial.Serial('COM3', 9600, timeout=0.05)
 
 # Get rid of garbage/incomplete data
-ser.flush()
-time.sleep(3)
+
+#ser.flush()
+#time.sleep(3)
 
 #variable
 #the minimum matching keypoint to detect the object
@@ -118,7 +121,7 @@ def LIVE_CAM_ORB(live_cam):
 
     #img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
     #cv2.imshow("ORB Keypoints and matched", img3)
-
+    fps.update()
     return live_cam
 
 def motor_degree(midpoint):
@@ -158,27 +161,35 @@ def send_to_arduino(x,y):
     print( "send string = {}".format(send_string))
     
     # Send the string. Make sure you encode it before you send it to the Arduino.
-    ser.write(send_string.encode('utf-8'))
-    time.sleep(0.2)
+    
+    #ser.write(send_string.encode('utf-8'))
+    #time.sleep(0.2)
     
 
 
 
 while(True):
     frame = cap.read()
+    fps = FPS().start()
    
     frame = LIVE_CAM_ORB(frame)
     
+    #FPS module
+    fps.stop()
+    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
     cv2.imshow("the actual frame", frame)
     #for debugging
     #receive serial print from arduino for checking value that rasp send
-    receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
-    print(receive_string)
+    
+    #receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
+    #print(receive_string)
     
     #press enter to exit
     if cv2.waitKey(1) == 13:
         break
-    time.sleep(0.05)
+    #time.sleep(0.05)
 
 
 cap.stop()
