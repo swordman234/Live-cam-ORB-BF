@@ -44,12 +44,15 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 # it has. The readline() function will only wait 1 second for a complete line 
 # of input.
 
-#ser = serial.Serial('COM3', 9600, timeout=0.05)
+ser = serial.Serial('COM3', 115200)#, timeout=0.05)
 
 # Get rid of garbage/incomplete data
 
-#ser.flush()
-#time.sleep(3)
+ser.flush()
+time.sleep(3)
+
+#make CSV file for datalogger
+datalog = open("data.csv","a")
 
 #variable
 #the minimum matching keypoint to detect the object
@@ -126,12 +129,9 @@ def LIVE_CAM_ORB(live_cam):
 
 def motor_degree(midpoint):
     #get X degree
-    X_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree))+min_X_degree)
+    X_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree)) + min_X_degree)
 
     #get Y degree
-    #because you got a flipped value
-    #(the higher you get, the smaller the midpoint value)
-    #the formula is different from getting X
     Y_degree = int(max_Y_degree-(midpoint[1]/height*(max_Y_degree-min_Y_degree)))
     
     #because the servo only can move until 75 degree
@@ -158,11 +158,11 @@ def send_to_arduino(x,y):
 
     #debugging
     #to check the value in send_string
-    print( "send string = {}".format(send_string))
+    #print( "send string = {}".format(send_string))
     
     # Send the string. Make sure you encode it before you send it to the Arduino.
     
-    #ser.write(send_string.encode('utf-8'))
+    ser.write(send_string.encode('utf-8'))
     #time.sleep(0.2)
     
 
@@ -176,14 +176,15 @@ while(True):
     
     #FPS module
     fps.stop()
-    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+    #print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    #print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 
     cv2.imshow("the actual frame", frame)
     #for debugging
     #receive serial print from arduino for checking value that rasp send
     
-    #receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
+    receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
+    datalog.write(str(fps.elapsed())+','+receive_string + "\n") #write data with a newline
     #print(receive_string)
     
     #press enter to exit
@@ -191,6 +192,6 @@ while(True):
         break
     #time.sleep(0.05)
 
-
+datalog.close()
 cap.stop()
 cv2.destroyAllWindows()
