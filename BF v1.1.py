@@ -187,6 +187,8 @@ while(True):
     datalog.write(str(fps.elapsed())+','+receive_string + "\n") #write data with a newline
     #print(receive_string)
     
+    ser.flush()
+    
     #press enter to exit
     if cv2.waitKey(1) == 13:
         break
