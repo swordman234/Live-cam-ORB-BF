@@ -7,9 +7,6 @@ float correct_x;
 float correct_y;
 float correct_z;
 
-// how much serial data we expect before a newline/enter
-const unsigned int MAX_INPUT = 10;
-
 //=======================================================================
 
 #include <Wire.h>
@@ -67,12 +64,21 @@ float kpz = 1.019039;
 float kiz = 0;
 float kdz = 0.012509;
 
+float timenow = 0;
+float timeend = 0;
+float timeelapsed = 0;
+
+
+// how much serial data we expect before a newline/enter
+const unsigned int MAX_INPUT = 10;
 
 //---------------------------------------------------------------
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
+  //Serial.println("------------setup begin------------");
+  
   servo_x.attach(8);                  // Set pin 8 untuk servo x
   servo_y.attach(9);                  // Set pin 9 untuk servo y
   servo_z.attach(10);                 // Set pin 10 untuk servo z
@@ -129,6 +135,8 @@ void setup() {
   delay(20);
   calculate_IMU_error2();
   delay(200);
+
+  //Serial.println("------------setup end------------");
 }
 
 // split the data into its parts
@@ -230,7 +238,7 @@ void calculate_IMU_error() {
 
   // Print error values pada Serial Monitor
   // Apabila tidak terdapat error maka akan bernilai 0
-  Serial.print("AccErrorX: ");
+  /*Serial.print("AccErrorX: ");
   Serial.println(AccErrorX);
   Serial.print("AccErrorY: ");
   Serial.println(AccErrorY);
@@ -239,7 +247,7 @@ void calculate_IMU_error() {
   Serial.print("GyroErrorY: ");
   Serial.println(GyroErrorY);
   Serial.print("GyroErrorZ: ");
-  Serial.println(GyroErrorZ);
+  Serial.println(GyroErrorZ);*/
 }
 
 void calculate_IMU_error2() {
@@ -290,7 +298,7 @@ void calculate_IMU_error2() {
 
   // Print error values pada Serial Monitor
   // Apabila tidak terdapat error maka akan bernilai 0
-  Serial.print("AccErrorX: ");
+  /*Serial.print("AccErrorX: ");
   Serial.println(AccErrorX2);
   Serial.print("AccErrorY: ");
   Serial.println(AccErrorY2);
@@ -299,11 +307,14 @@ void calculate_IMU_error2() {
   Serial.print("GyroErrorY: ");
   Serial.println(GyroErrorY2);
   Serial.print("GyroErrorZ: ");
-  Serial.println(GyroErrorZ2);
+  Serial.println(GyroErrorZ2);*/
 }
 //---------------------------------------------------------------
 
 void loop() {
+  //check time
+  timenow=millis();
+  
   // === Read serial input if available ===//
   if (Serial.available() > 0) {
     processIncomingByte (Serial.read ());
@@ -345,9 +356,9 @@ void loop() {
   GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
 
   // Nilai Output dikoreksi dengan dijumlahkan dengan nilai yg didapat dari void calculate_IMU_error()
-  GyroX = GyroX - 3.68;          //0.74;
-  GyroY = GyroY + 0.03;          //0.66;
-  GyroZ = GyroZ - 0.22;          //0.03;
+  GyroX = GyroX - 1.49;          //0.74;
+  GyroY = GyroY + 0.51;          //0.66;
+  GyroZ = GyroZ + 0.25;          //0.03;
 
   // Karena hasilnya masih berupa degrees per seconds (deg/s), Jadi harus dikalikan dengan satuan waktu (seconds) untuk mendapatkan nilai sudut dalam degrees
   gyroAngleX = gyroAngleX + GyroX * elapsedTime; // deg/s * s = deg
@@ -388,9 +399,9 @@ void loop() {
   GyroZ2 = (Wire.read() << 8 | Wire.read()) / 131.0;
 
   // Nilai Output dikoreksi dengan dijumlahkan dengan nilai yg didapat dari void calculate_IMU_error()
-  GyroX2 = GyroX2 + 0.52;//5.44;          //
-  GyroY2 = GyroY2 - 0.13;//0.11;          //
-  GyroZ2 = GyroZ2 - 0.6;//1.69;          //
+  GyroX2 = GyroX2 + 0.88;//5.44;          //
+  GyroY2 = GyroY2 + 0.79;//0.11;          //
+  GyroZ2 = GyroZ2 + 0.03;//1.69;          //
 
   // Karena hasilnya masih berupa degrees per seconds (deg/s), Jadi harus dikalikan dengan satuan waktu (seconds) untuk mendapatkan nilai sudut dalam degrees
   gyroAngleX2 = gyroAngleX2 + GyroX2 * elapsedTime2; // deg/s * s = deg
@@ -407,9 +418,9 @@ void loop() {
   int servo2Value = yaw * 4; //
 
 
-  int servo0Value1 = map(servo0Value, -90, 90, pX, qX);
-  int servo1Value1 = map(servo1Value, -90, 90, 180, 0);
-  int servo2Value1 = map(servo2Value, -90, 90, pZ, qZ);
+  int servo0Value1 = map(servo0Value, -90, 90, qX, pX);
+  int servo1Value1 = map(servo1Value, -90, 90, 0, 180);
+  int servo2Value1 = map(servo2Value, -90, 90, qZ, pZ);
   //  servo0Value1 =servo0Value1 +30;
   //if(servo0Value1<70){
   //  servo0Value1 =70;
@@ -422,9 +433,9 @@ void loop() {
   int gyro1Value1 = pitch2 * 4;
   int gyro2Value1 = yaw2 * 4;
 
-  int gyro0Value2 = map(gyro0Value1, -90, 90, pX, qX); //90-->22 == 4x lipat
-  int gyro1Value2 = map(gyro1Value1, -90, 90, 180, 0);
-  int gyro2Value2 = map(gyro2Value1, -90, 90, pZ, qZ);
+  int gyro0Value2 = map(gyro0Value1, -90, 90, qX, pX); //90-->22 == 4x lipat
+  int gyro1Value2 = map(gyro1Value1, -90, 90, 0, 180);
+  int gyro2Value2 = map(gyro2Value1, -90, 90, qZ, pZ);
   //----------------------------------------------------------
 
   // Servo dikontrol berdasarkan output dari MPU6050
@@ -472,7 +483,7 @@ void loop() {
   prev_errorz = errorz;
   int pid_z = spZ - pidz;
 
-   /*Serial.print("Body X : ");
+  /*Serial.print("Body X : ");
   Serial.print(servo0Value1);
   Serial.print("           Body Y : ");
   Serial.print(servo1Value1);
@@ -484,7 +495,7 @@ void loop() {
     Serial.print(pid_y);
     Serial.print("            PID Z : ");
     Serial.print(pid_z);*/
-   /*Serial.print("            Canon X : ");
+  /*Serial.print("            Canon X : ");
   Serial.print(gyro0Value2);
   Serial.print("            Canon Y : ");
   Serial.print(gyro1Value2);
@@ -493,6 +504,10 @@ void loop() {
   servo_x.write(pid_x);
   servo_y.write(pid_y);                  // Set posisi servo y ke 90 derajat
   servo_z.write(pid_z);                  // Set posisi servo z ke 90 derajat
+  
+  timestop = millis();
+  timeelapsed = timestop - timenow;
+  Serial.println(timeelapsed);
   //---------------------------------------------------------------
   /*
     // Untuk mengetahui posisi dari body tank
