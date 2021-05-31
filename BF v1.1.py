@@ -164,6 +164,7 @@ def send_to_arduino(x,y):
     
     ser.write(send_string.encode('utf-8'))
     #time.sleep(0.2)
+    ser.flushInput()
     
 
 
