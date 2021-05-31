@@ -7,6 +7,13 @@ float correct_x;
 float correct_y;
 float correct_z;
 
+// how much serial data we expect before a newline/enter
+const unsigned int MAX_INPUT = 7;
+
+float timenow = 0;
+float timeend = 0;
+float timeelapsed = 0;
+
 //=======================================================================
 
 #include <Wire.h>
@@ -64,21 +71,12 @@ float kpz = 1.019039;
 float kiz = 0;
 float kdz = 0.012509;
 
-float timenow = 0;
-float timeend = 0;
-float timeelapsed = 0;
-
-
-// how much serial data we expect before a newline/enter
-const unsigned int MAX_INPUT = 10;
 
 //---------------------------------------------------------------
 
 void setup() {
   Serial.begin(115200);
 
-  //Serial.println("------------setup begin------------");
-  
   servo_x.attach(8);                  // Set pin 8 untuk servo x
   servo_y.attach(9);                  // Set pin 9 untuk servo y
   servo_z.attach(10);                 // Set pin 10 untuk servo z
@@ -135,8 +133,6 @@ void setup() {
   delay(20);
   calculate_IMU_error2();
   delay(200);
-
-  //Serial.println("------------setup end------------");
 }
 
 // split the data into its parts
@@ -176,7 +172,8 @@ void processIncomingByte (const byte inByte)
       process_data (input_line);
       
       // reset buffer for next time
-      input_pos = 0;  
+      input_pos = 0; 
+      Serial.begin(115200); 
       break;
 
     default:
@@ -312,11 +309,12 @@ void calculate_IMU_error2() {
 //---------------------------------------------------------------
 
 void loop() {
-  //check time
-  timenow=millis();
+  timenow = millis();
   
   // === Read serial input if available ===//
-  if (Serial.available() > 0) {
+
+  if(Serial.available() > 0) {
+    //delay(100);
     processIncomingByte (Serial.read ());
     spX = raspiY;
     pX = raspiY + 90;
@@ -326,7 +324,7 @@ void loop() {
     pZ = raspiX + 90;
     qZ = raspiX - 90;
     }
-  delay(50);
+  //delay(50);
   // === Read acceleromter data === //
   Wire.beginTransmission(MPU);
   Wire.write(0x3B); // Start with register 0x3B (ACCEL_XOUT_H)
@@ -356,9 +354,9 @@ void loop() {
   GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
 
   // Nilai Output dikoreksi dengan dijumlahkan dengan nilai yg didapat dari void calculate_IMU_error()
-  GyroX = GyroX - 1.49;          //0.74;
-  GyroY = GyroY + 0.51;          //0.66;
-  GyroZ = GyroZ + 0.25;          //0.03;
+  GyroX = GyroX - 1.40;          //0.74;
+  GyroY = GyroY + 0.50;          //0.66;
+  GyroZ = GyroZ + 0.02;          //0.03;
 
   // Karena hasilnya masih berupa degrees per seconds (deg/s), Jadi harus dikalikan dengan satuan waktu (seconds) untuk mendapatkan nilai sudut dalam degrees
   gyroAngleX = gyroAngleX + GyroX * elapsedTime; // deg/s * s = deg
@@ -399,9 +397,9 @@ void loop() {
   GyroZ2 = (Wire.read() << 8 | Wire.read()) / 131.0;
 
   // Nilai Output dikoreksi dengan dijumlahkan dengan nilai yg didapat dari void calculate_IMU_error()
-  GyroX2 = GyroX2 + 0.88;//5.44;          //
-  GyroY2 = GyroY2 + 0.79;//0.11;          //
-  GyroZ2 = GyroZ2 + 0.03;//1.69;          //
+  GyroX2 = GyroX2 + 0.77;//5.44;          //
+  GyroY2 = GyroY2 + 0.63;//0.11;          //
+  GyroZ2 = GyroZ2 - 0.00;//1.69;          //
 
   // Karena hasilnya masih berupa degrees per seconds (deg/s), Jadi harus dikalikan dengan satuan waktu (seconds) untuk mendapatkan nilai sudut dalam degrees
   gyroAngleX2 = gyroAngleX2 + GyroX2 * elapsedTime2; // deg/s * s = deg
@@ -420,7 +418,7 @@ void loop() {
 
   int servo0Value1 = map(servo0Value, -90, 90, qX, pX);
   int servo1Value1 = map(servo1Value, -90, 90, 0, 180);
-  int servo2Value1 = map(servo2Value, -90, 90, qZ, pZ);
+  int servo2Value1 = map(servo2Value, -90, 90, pZ, qZ);
   //  servo0Value1 =servo0Value1 +30;
   //if(servo0Value1<70){
   //  servo0Value1 =70;
@@ -435,7 +433,7 @@ void loop() {
 
   int gyro0Value2 = map(gyro0Value1, -90, 90, qX, pX); //90-->22 == 4x lipat
   int gyro1Value2 = map(gyro1Value1, -90, 90, 0, 180);
-  int gyro2Value2 = map(gyro2Value1, -90, 90, qZ, pZ);
+  int gyro2Value2 = map(gyro2Value1, -90, 90, pZ, qZ);
   //----------------------------------------------------------
 
   // Servo dikontrol berdasarkan output dari MPU6050
@@ -454,8 +452,8 @@ void loop() {
   pidx = px + ix + dx;
   prev_errorx = errorx;
   int pid_x = spX - pidx;
-  if (pid_x < 70) {
-    pid_x = 70;
+  if (pid_x < 90) {
+    pid_x = 90;
   }
   else if (pid_x > 130) {
     pid_x = 130;
@@ -468,11 +466,11 @@ void loop() {
   pidy = py + iy + dy;
   prev_errory = errory;
   int pid_y = spY - pidy;
-  if (pid_y < 60) {
-    pid_y = 60;
+  if (pid_y < 70) {
+    pid_y = 70;
   }
-  else if (pid_y > 120) {
-    pid_x = 120;
+  else if (pid_y > 110) {
+    pid_y = 110;
   }
 
   errorz = spZ - servo2Value1;
@@ -505,9 +503,16 @@ void loop() {
   servo_y.write(pid_y);                  // Set posisi servo y ke 90 derajat
   servo_z.write(pid_z);                  // Set posisi servo z ke 90 derajat
   
-  timestop = millis();
-  timeelapsed = timestop - timenow;
+  /*Serial.print(raspiX);
+  Serial.print(",");
+  Serial.println(raspiY);*/
+  /*Serial.print(spZ);
+  Serial.print(",");
+  Serial.println(spX);*/
+  timeend = millis();
+  timeelapsed = (timeend-timenow)/1000;
   Serial.println(timeelapsed);
+  
   //---------------------------------------------------------------
   /*
     // Untuk mengetahui posisi dari body tank
@@ -529,4 +534,5 @@ void loop() {
     Serial.println(gyro2Value2);
     //----------------------------------------------------------
   */
+  //Serial.flush();
 }
