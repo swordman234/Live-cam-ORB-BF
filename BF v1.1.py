@@ -8,7 +8,7 @@
 #import imutils
 import numpy as np
 from imutils.video import WebcamVideoStream
-from imutils.video import FPS
+#from imutils.video import FPS
 import cv2
 import time
 import serial
@@ -44,7 +44,7 @@ bf  = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 # it has. The readline() function will only wait 1 second for a complete line 
 # of input.
 
-ser = serial.Serial('COM3', 115200)#, timeout=0.05)
+ser = serial.Serial('/dev/ttyACM0', 115200, timeout=0.05)
 
 # Get rid of garbage/incomplete data
 
@@ -52,7 +52,7 @@ ser.flush()
 time.sleep(3)
 
 #make CSV file for datalogger
-datalog = open("data.csv","a")
+#datalog = open("data.csv","a")
 
 #variable
 #the minimum matching keypoint to detect the object
@@ -63,6 +63,8 @@ min_X_degree = 55   #min camera X angle 54.79
 max_X_degree = 125  #max camera X angle 125.21
 min_Y_degree = 70   #min camera Y angle 68.35
 max_Y_degree = 110  #max camera Y angle 111.65
+
+#no_frame=0
 
 
 def LIVE_CAM_ORB(live_cam):
@@ -124,19 +126,21 @@ def LIVE_CAM_ORB(live_cam):
 
     #img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
     #cv2.imshow("ORB Keypoints and matched", img3)
-    fps.update()
+    #fps.update()
     return live_cam
 
 def motor_degree(midpoint):
     #get X degree
-    X_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree)) + min_X_degree)
-
+    #X_degree = int((midpoint[0]/width*(max_X_degree-min_X_degree)) + min_X_degree)
+    X_degree = int(max_X_degree-(midpoint[0]/width*(max_X_degree-min_X_degree)))
     #get Y degree
     Y_degree = int(max_Y_degree-(midpoint[1]/height*(max_Y_degree-min_Y_degree)))
+    #Y_degree = int((midpoint[1]/height*(max_Y_degree-min_Y_degree))+min_Y_degree)
     
     #because the servo only can move until 75 degree
-    if (Y_degree < 75):
-        Y_degree = 75
+    #become 90 coz it hit the camera
+    if (Y_degree < 90):
+        Y_degree = 90
 
     #for debugging
     #print( "X,Y = ({},{})".format(midpoint[0],midpoint[1]))
@@ -159,42 +163,44 @@ def send_to_arduino(x,y):
     #debugging
     #to check the value in send_string
     #print( "send string = {}".format(send_string))
+    #print(send_string)
     
     # Send the string. Make sure you encode it before you send it to the Arduino.
-    
     ser.write(send_string.encode('utf-8'))
     #time.sleep(0.2)
-    ser.flushInput()
     
+
 
 
 
 while(True):
     frame = cap.read()
-    fps = FPS().start()
+    #fps = FPS().start()
    
     frame = LIVE_CAM_ORB(frame)
     
     #FPS module
-    fps.stop()
-    #print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    #fps.stop()
+    #print(fps.elapsed())
     #print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
-
+    cv2.imwrite('FPS benda bergerak 1280 X 720.jpg',frame)
+    #no_frame+=1
+    
     cv2.imshow("the actual frame", frame)
+    
+    
     #for debugging
     #receive serial print from arduino for checking value that rasp send
-    
-    receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
-    datalog.write(str(fps.elapsed())+','+receive_string + "\n") #write data with a newline
+    #receive_string = ser.readline().decode('utf-8', 'replace').rstrip()
+    #datalog.write(str(fps.elapsed())+','+receive_string + "\n") #write data with a newline
     #print(receive_string)
-    
-    ser.flush()
+    #ser.flushInput()
     
     #press enter to exit
     if cv2.waitKey(1) == 13:
         break
-    #time.sleep(0.05)
+    time.sleep(0.05)
 
-datalog.close()
+#datalog.close()
 cap.stop()
 cv2.destroyAllWindows()
