@@ -3,7 +3,7 @@ Servo servo_x;
 Servo servo_y;
 Servo servo_z;
 // how much serial data we expect before a newline
-const unsigned int MAX_INPUT = 10;
+const unsigned int MAX_INPUT = 7;
 int nilaiX = map(0, -90, 90, 0, 180);
 int nilaiY = map(0, -90, 90, 0, 180);
 int raspiX = 90;
