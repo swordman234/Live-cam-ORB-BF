@@ -78,6 +78,7 @@ void setup() {
 */
 }
 void loop() {
+    //Serial.println("LOOP mulai");
   // We can call this funtion in the setup section to calculate the accelerometer and gyro data error. From here we will get the error values used in the above equations printed on the Serial Monitor.
   // Note that we should place the IMU flat in order to get the proper values, so that we then can the correct values
   // Read accelerometer values 200 times
@@ -94,6 +95,7 @@ void loop() {
     AccErrorY = AccErrorY + ((atan(-1 * (AccX) / sqrt(pow((AccY), 2) + pow((AccZ), 2))) * 180 / PI));
     c++;
   }
+  //Serial.println("errorx kelar");
   //Divide the sum by 200 to get the error value
   AccErrorX = AccErrorX / 200;
   AccErrorY = AccErrorY / 200;
@@ -112,6 +114,7 @@ void loop() {
     AccErrorY2 = AccErrorY2 + ((atan(-1 * (AccX2) / sqrt(pow((AccY2), 2) + pow((AccZ2), 2))) * 180 / PI));
     c2++;
   }
+  //Serial.println("errorx2 kelar");
   //Divide the sum by 200 to get the error value
   AccErrorX2 = AccErrorX2 / 200;
   AccErrorY2 = AccErrorY2 / 200;
@@ -132,6 +135,7 @@ void loop() {
     GyroErrorZ = GyroErrorZ + (GyroZ / 131.0);
     c++;
   }
+  //Serial.println("gyroerror kelar");
   //Divide the sum by 200 to get the error value
   GyroErrorX = GyroErrorX / 200;
   GyroErrorY = GyroErrorY / 200;
@@ -139,7 +143,7 @@ void loop() {
 //Wire.endTransmission();
 //delay(20);
   //---------------------------------------------------------------
-  
+  c2=0;
   // Read gyro values 200 times
   while (c2 < 200) {
     Wire.beginTransmission(MPU2);
@@ -159,6 +163,7 @@ void loop() {
   GyroErrorX2 = GyroErrorX2 / 200;
   GyroErrorY2 = GyroErrorY2 / 200;
   GyroErrorZ2 = GyroErrorZ2 / 200;
+  //Serial.println("gyroerror2 kelar");
   //Wire.endTransmission();
   //---------------------------------------------------------------
   // Print the error values on the Serial Monitor
@@ -195,7 +200,7 @@ void loop() {
   Serial.print("    GyroErrorZ2: ");
   Serial.println(GyroErrorZ2);
 //----------------------------------------------------------------
-
+Serial.println("LOOP abis");
 }
 void calculate_IMU_error() {
   // We can call this funtion in the setup section to calculate the accelerometer and gyro data error. From here we will get the error values used in the above equations printed on the Serial Monitor.
