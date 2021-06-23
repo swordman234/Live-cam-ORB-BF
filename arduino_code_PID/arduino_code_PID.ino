@@ -10,9 +10,9 @@ float correct_z;
 // how much serial data we expect before a newline/enter
 const unsigned int MAX_INPUT = 7;
 
-float timenow = 0;
+/*float timenow = 0;
 float timeend = 0;
-float timeelapsed = 0;
+float timeelapsed = 0;*/
 
 //=======================================================================
 
@@ -309,7 +309,7 @@ void calculate_IMU_error2() {
 //---------------------------------------------------------------
 
 void loop() {
-  timenow = millis();
+  //timenow = millis();
   
   // === Read serial input if available ===//
 
@@ -355,8 +355,8 @@ void loop() {
 
   // Nilai Output dikoreksi dengan dijumlahkan dengan nilai yg didapat dari void calculate_IMU_error()
   GyroX = GyroX - 1.40;          //0.74;
-  GyroY = GyroY + 0.50;          //0.66;
-  GyroZ = GyroZ + 0.02;          //0.03;
+  GyroY = GyroY + 0.44;          //0.66;
+  GyroZ = GyroZ + 0.05;          //0.03;
 
   // Karena hasilnya masih berupa degrees per seconds (deg/s), Jadi harus dikalikan dengan satuan waktu (seconds) untuk mendapatkan nilai sudut dalam degrees
   gyroAngleX = gyroAngleX + GyroX * elapsedTime; // deg/s * s = deg
@@ -397,9 +397,9 @@ void loop() {
   GyroZ2 = (Wire.read() << 8 | Wire.read()) / 131.0;
 
   // Nilai Output dikoreksi dengan dijumlahkan dengan nilai yg didapat dari void calculate_IMU_error()
-  GyroX2 = GyroX2 + 0.77;//5.44;          //
-  GyroY2 = GyroY2 + 0.63;//0.11;          //
-  GyroZ2 = GyroZ2 - 0.00;//1.69;          //
+  GyroX2 = GyroX2 + 0.78;//5.44;          //
+  GyroY2 = GyroY2 + 0.62;//0.11;          //
+  GyroZ2 = GyroZ2 - 0.01;//1.69;          //
 
   // Karena hasilnya masih berupa degrees per seconds (deg/s), Jadi harus dikalikan dengan satuan waktu (seconds) untuk mendapatkan nilai sudut dalam degrees
   gyroAngleX2 = gyroAngleX2 + GyroX2 * elapsedTime2; // deg/s * s = deg
@@ -484,7 +484,7 @@ void loop() {
   /*Serial.print("Body X : ");
   Serial.print(servo0Value1);
   Serial.print("           Body Y : ");
-  Serial.print(servo1Value1);
+  Serial.print(servo1Value1);/*
   Serial.print("           Body Z : ");
   Serial.print(servo2Value1);*/
   /*Serial.print("            PID X : ");
@@ -509,9 +509,9 @@ void loop() {
   /*Serial.print(spZ);
   Serial.print(",");
   Serial.println(spX);*/
-  timeend = millis();
+  /*timeend = millis();
   timeelapsed = (timeend-timenow)/1000;
-  Serial.println(timeelapsed);
+  Serial.println(timeelapsed);*/
   
   //---------------------------------------------------------------
   /*
